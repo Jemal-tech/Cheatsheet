@@ -1,7 +1,7 @@
 # IOCLA CHEATSHEET
 
-## PRINTF formats
-### 1. The Standard Integer Cheat Sheet
+## 1. PRINTF formats
+### a. The Standard Integer Cheat Sheet
 | Size | Assembly Register | C Type (Signed / Unsigned) | Signed (`int`) | Unsigned | Hexadecimal (Lower / Upper) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **8-bit** | `al`, `bl`, `cl`, `dl` | `char` / `unsigned char` | `%hhd` | `%hhu` | `%hhx` / `%hhX` |
@@ -9,7 +9,7 @@
 | **32-bit** | `eax`, `ebx`, `ecx` | `int` / `unsigned int` | `%d` (or `%i`) | `%u` | `%x` / `%X` |
 | **64-bit** | `rax`, `rbx`, `rcx` | `long` / `unsigned long` | `%ld` | `%lu` | `%lx` / `%lX` |
 
-### 2. Pointers, Text, and Floats
+### b. Pointers, Text, and Floats
 | Data Type | Description | Format Specifier | Example Output |
 | :--- | :--- | :--- | :--- |
 | **Memory Address** | Any Pointer (`void *`, `int *`, etc.) | `%p` | `0x7ffeb5b9a4c0` |
