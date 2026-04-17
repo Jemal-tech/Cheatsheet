@@ -9,6 +9,8 @@
 | **32-bit** | `eax`, `ebx`, `ecx` | `int` / `unsigned int` | `%d` (or `%i`) | `%u` | `%x` / `%X` |
 | **64-bit** | `rax`, `rbx`, `rcx` | `long` / `unsigned long` | `%ld` | `%lu` | `%lx` / `%lX` |
 
+---
+
 ### b. Pointers, Text, and Floats
 | Data Type | Description | Format Specifier | Example Output |
 | :--- | :--- | :--- | :--- |
@@ -18,7 +20,9 @@
 | **Floating Point**| Single precision (`float` - 32-bit) | `%f` | `3.141593` |
 | **Floating Point**| Double precision (`double` - 64-bit) | `%lf` | `3.1415926535` |
 
-## x86 Assembly Arithmetic
+---
+
+## Assembly Arithmetic
 ### a. Addition and Subtraction
 The CPU uses the exact same instructions for both signed and unsigned numbers.
 | Operation | Instruction | Example | Description |
