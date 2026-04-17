@@ -1,19 +1,15 @@
-### 1. The Standard Integer Cheat Sheet
+# IOCLA CHEATSHEET
 
+## PRINTF formats
+### 1. The Standard Integer Cheat Sheet
 | Size | Assembly Register | C Type (Signed / Unsigned) | Signed (`int`) | Unsigned | Hexadecimal (Lower / Upper) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **8-bit** | `al`, `bl`, `cl`, `dl` | `char` / `unsigned char` | `%hhd` | `%hhu` | `%hhx` / `%hhX` |
 | **16-bit** | `ax`, `bx`, `cx`, `dx` | `short` / `unsigned short` | `%hd` | `%hu` | `%hx` / `%hX` |
 | **32-bit** | `eax`, `ebx`, `ecx` | `int` / `unsigned int` | `%d` (or `%i`) | `%u` | `%x` / `%X` |
 | **64-bit** | `rax`, `rbx`, `rcx` | `long` / `unsigned long` | `%ld` | `%lu` | `%lx` / `%lX` |
-| **64-bit** | (Windows / Cross-platform)| `long long` / `unsigned long long`| `%lld` | `%llu` | `%llx` / `%llX` |
-
-*(Note: In 64-bit Linux/macOS, a standard `long` is 64 bits, hence `%ld`. On Windows, `long` is only 32 bits, so you must use `long long` and `%lld` for 64-bit values).*
-
----
 
 ### 2. Pointers, Text, and Floats
-
 | Data Type | Description | Format Specifier | Example Output |
 | :--- | :--- | :--- | :--- |
 | **Memory Address** | Any Pointer (`void *`, `int *`, etc.) | `%p` | `0x7ffeb5b9a4c0` |
