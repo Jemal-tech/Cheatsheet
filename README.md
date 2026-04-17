@@ -150,3 +150,42 @@ The `cmp` instruction is the most common way to trigger flags before a jump.
 * **If `rax == rbx`:** The hidden subtraction equals 0. **ZF** becomes `1`. (Use `je` - Jump if Equal).
 * **If `rax < rbx` (Unsigned):** The hidden subtraction requires a borrow. **CF** becomes `1`. (Use `jb` - Jump if Below).
 * **If `rax < rbx` (Signed):** The hidden subtraction results in a negative number. **SF** becomes `1` (usually). (Use `jl` - Jump if Less).
+
+
+# x86-64 Signed vs. Unsigned Operations
+
+### a. The "Sign-Agnostic" Instructions (Works for BOTH)
+Because x86 uses Two's Complement binary, the hardware uses the exact same bit-flipping logic for these operations regardless of the sign.
+
+* **Basic Math:** `add`, `sub`, `inc`, `dec`
+* **Bitwise Logic:** `and`, `or`, `xor`, `not`, `test`
+* **Bit Shift Left:** `shl` and `sal` (Shift Arithmetic Left). *Fun fact: In x86, these are literally the exact same instruction under the hood!*
+* **Equality Jumps:** `je` (Jump Equal), `jne` (Jump Not Equal), `jz` (Jump Zero), `jnz` (Jump Not Zero)
+
+---
+
+### b. The Great Divide (Sign-Aware Instructions)
+When an operation needs to change the physical size of a number, divide it, or compare which one is larger, you **must** choose the correct instruction based on your C data type (`int` vs. `unsigned int`).
+
+| Operation Category | Signed Instruction (e.g., `int`) | Unsigned Instruction (e.g., `unsigned`) |
+| :--- | :--- | :--- |
+| **Multiplication** | `imul` (Integer Multiply) | `mul` (Unsigned Multiply) |
+| **Division** | `idiv` (Integer Divide) | `div` (Unsigned Divide) |
+| **Sign Extension (Div Prep)** | `cbw`, `cwd`, `cdq`, `cqo` <br>*(Fills upper register with Sign Bit)* | `xor edx, edx` / `xor rdx, rdx`<br>*(Manually clear upper register to 0s)* |
+| **Widening (Copying sizes)** | `movsx` (Move with Sign Extend)<br>*(Copies the sign bit to fill new space)* | `movzx` (Move with Zero Extend)<br>*(Fills new space strictly with 0s)* |
+| **Bit Shift Right** | `sar` (Shift Arithmetic Right)<br>*(Drags the sign bit along. Preserves negatives!)* | `shr` (Shift Right)<br>*(Pulls in fresh 0s from the left)* |
+
+---
+
+### c. The Comparison Jumps (`cmp` results)
+If you use `cmp rax, rbx`, the CPU sets the flags. You must use the correct jump instruction so the CPU looks at the correct flags!
+
+| Mathematical Question | Signed Jump (Looks at SF / OF) | Unsigned Jump (Looks at CF) |
+| :--- | :--- | :--- |
+| **Is A > B?** | `jg` (Jump Greater) | `ja` (Jump Above) |
+| **Is A >= B?** | `jge` (Jump Greater or Equal) | `jae` (Jump Above or Equal) |
+| **Is A < B?** | `jl` (Jump Less) | `jb` (Jump Below) |
+| **Is A <= B?** | `jle` (Jump Less or Equal) | `jbe` (Jump Below or Equal) |
+
+**The Golden Rule of Jumps:** * Use **Greater/Less** (`jg`, `jl`) for **Signed** numbers. 
+* Use **Above/Below** (`ja`, `jb`) for **Unsigned** numbers (like memory addresses or sizes).
