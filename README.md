@@ -129,3 +129,24 @@ _start:
                        ; rax (Quotient)  = -16 (0xFFFFFFFFFFFFFFF0)
                        ; rdx (Remainder) = -2  (0xFFFFFFFFFFFFFFFE)
 ```
+
+# x86-64 Status Flags
+
+The CPU automatically updates these flags in the `RFLAGS` register after almost every arithmetic (`add`, `sub`) or logical (`and`, `or`, `xor`) instruction.
+
+| Flag Name | Abbreviation | When does it get set to `1`? | Assembly Example |
+| :--- | :--- | :--- | :--- |
+| **Zero Flag** | **ZF** | The result of an operation is exactly zero. (Highly used for checking equality). | `sub rax, rax` <br>*(Result is 0, ZF = 1)* |
+| **Sign Flag** | **SF** | The highest bit (Most Significant Bit) of the result is a `1`. In Two's Complement, this means the result is negative. | `mov rax, 3` <br>`sub rax, 5` <br>*(Result is -2, SF = 1)* |
+| **Carry Flag** | **CF** | An **unsigned** operation resulted in a value too large (or too small) to fit in the register. (Think of it as a carry-out or a borrow). | `mov al, 255` <br>`add al, 1` <br>*(al rolls over to 0, CF = 1)* |
+| **Overflow Flag**| **OF** | A **signed** operation resulted in a value that crossed the positive/negative boundary incorrectly. (e.g., adding two positive numbers yields a negative result). | `mov al, 127` <br>`add al, 1` <br>*(Max signed 8-bit is 127. Result rolls to -128, OF = 1)* |
+
+---
+
+### How Comparison (`cmp`) Uses Flags
+The `cmp` instruction is the most common way to trigger flags before a jump. 
+**Secret:** `cmp rax, rbx` is exactly the same as `sub rax, rbx`, except it *throws away the math result* and only updates the flags!
+
+* **If `rax == rbx`:** The hidden subtraction equals 0. **ZF** becomes `1`. (Use `je` - Jump if Equal).
+* **If `rax < rbx` (Unsigned):** The hidden subtraction requires a borrow. **CF** becomes `1`. (Use `jb` - Jump if Below).
+* **If `rax < rbx` (Signed):** The hidden subtraction results in a negative number. **SF** becomes `1` (usually). (Use `jl` - Jump if Less).
