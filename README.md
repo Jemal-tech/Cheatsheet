@@ -67,7 +67,7 @@ Before executing a signed division (`idiv`), you **must** stretch the sign bit o
 | `eax` (32-bit)| `cdq` (Convert Double to Quad)| `edx` | Prep for 32-bit `idiv` |
 | `rax` (64-bit)| `cqo` (Convert Quad to Octo) | `rdx` | Prep for 64-bit `idiv` |
 
-Example
+Example1:
 ```Assembly
 ; ---------------------------------------------------------
 ; Goal: Calculate -50 / 3 using signed 32-bit division
@@ -96,4 +96,36 @@ _start:
                        ; Result:
                        ; eax (Quotient)  = -16 (0xFFFFFFF0)
                        ; edx (Remainder) = -2  (0xFFFFFFFE)
+```
+
+Example2:
+```Assembly
+; ---------------------------------------------------------
+; Goal: Calculate -50 / 3 using signed 64-bit division
+; ---------------------------------------------------------
+
+section .text
+global _start
+
+_start:
+    ; 1. Load the 64-bit dividend into rax
+    mov rax, -50       ; rax now holds 0xFFFFFFFFFFFFFFCE (-50)
+
+    ; 2. Load the 64-bit divisor into another register
+    mov rbx, 3         ; rbx now holds 0x0000000000000003
+
+    ; 3. CRITICAL STEP: Sign Extension to 128-bit!
+    cqo                ; "Convert Quad to Octo"
+                       ; The CPU looks at the highest bit of rax (bit 63). 
+                       ; Because it is a 1 (indicating a negative number),
+                       ; cqo fills the entire 64-bit rdx register with 1s.
+                       ; rdx becomes 0xFFFFFFFFFFFFFFFF.
+                       ; rdx:rax is now a massive 128-bit mathematically 
+                       ; perfect representation of -50!
+
+    ; 4. Execute the division
+    idiv rbx           ; CPU divides the 128-bit rdx:rax by the 64-bit rbx
+                       ; Result:
+                       ; rax (Quotient)  = -16 (0xFFFFFFFFFFFFFFF0)
+                       ; rdx (Remainder) = -2  (0xFFFFFFFFFFFFFFFE)
 ```
