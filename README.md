@@ -189,3 +189,53 @@ If you use `cmp rax, rbx`, the CPU sets the flags. You must use the correct jump
 
 **The Golden Rule of Jumps:** * Use **Greater/Less** (`jg`, `jl`) for **Signed** numbers. 
 * Use **Above/Below** (`ja`, `jb`) for **Unsigned** numbers (like memory addresses or sizes).
+
+## The CF vs. OF
+
+### The Golden Rule
+* **Carry Flag (CF)** is strictly for **Unsigned** arithmetic.
+* **Overflow Flag (OF)** is strictly for **Signed** arithmetic.
+
+---
+
+### i. High-Level Comparison
+
+| Feature | Carry Flag (CF) | Overflow Flag (OF) |
+| :--- | :--- | :--- |
+| **Domain** | **Unsigned** numbers (e.g., `unsigned int`, memory addresses) | **Signed** numbers (e.g., `int`, Two's Complement) |
+| **The Meaning** | The physical register ran out of space (a carry-out or borrow occurred). | The mathematical sign of the result makes no logical sense. |
+| **Hardware Trigger** | The Most Significant Bit (MSB) pushed a `1` off the edge of the register. | The carry *into* the MSB does not match the carry *out* of the MSB. |
+| **Relevant Jumps** | `ja` (Above), `jb` (Below), `jc` (Jump Carry) | `jg` (Greater), `jl` (Less), `jo` (Jump Overflow) |
+
+---
+
+### ii. Concrete Examples (Using the 8-bit `al` register)
+* **8-bit Unsigned Range:** 0 to 255
+* **8-bit Signed Range:** -128 to +127
+
+#### Scenario A: The Carry Flag Triggers (CF = 1, OF = 0)
+**The Code:**
+```nasm
+mov al, 255   ; Unsigned: 255. Signed: -1
+add al, 1     ; Add 1 to al
+```
+* **Unsigned View:** `255 + 1 = 256`. 256 requires 9 bits and cannot fit in an 8-bit register. The CPU drops a bit off the edge. **CF is set to 1.**
+* **Signed View:** `-1 + 1 = 0`. This is perfectly valid math, and `0` fits comfortably inside the signed limit. **OF is set to 0.**
+
+#### Scenario B: The Overflow Flag Triggers (CF = 0, OF = 1)
+**The Code:**
+```nasm
+mov al, 127   ; Unsigned: 127. Signed: +127
+add al, 1     ; Add 1 to al
+```
+* **Unsigned View:** `127 + 1 = 128`. 128 easily fits inside the 255 max limit. No extra bits fell off the edge. **CF is set to 0.**
+* **Signed View:** `+127 + 1 = +128`. The absolute maximum positive number an 8-bit signed register can hold is +127. Adding 1 causes the sign bit to accidentally flip to a `1` (negative). The CPU sees *Positive + Positive = Negative* and panics. **OF is set to 1.**
+
+#### Scenario C: Both Flags Trigger (CF = 1, OF = 1)
+**The Code:**
+```nasm
+mov al, 128   ; Unsigned: 128. Signed: -128
+add al, 128   ; Add 128 to al
+```
+* **Unsigned View:** `128 + 128 = 256`. This exceeds the 255 limit, dropping a bit off the edge. **CF is set to 1.**
+* **Signed View:** `-128 + -128 = -256`. The absolute minimum number is -128. Adding two negative numbers causes the sign bit to accidentally flip to `0` (positive). The CPU sees *Negative + Negative = Positive* and panics. **OF is set to 1.**
