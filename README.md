@@ -58,7 +58,7 @@ Division requires you to load a dividend twice as large as your divisor across t
 
 ---
 
-### c. Sign Extension (CRITICAL for `idiv`)
+### d. Sign Extension (CRITICAL for `idiv`)
 Before executing a signed division (`idiv`), you **must** stretch the sign bit of `rax` all the way across `rdx`. If `rax` is negative, `rdx` must be filled with `1`s. If positive, `0`s. 
 | Original Register | Setup Instruction | Fills this Register | Purpose |
 | :--- | :--- | :--- | :--- |
@@ -66,3 +66,34 @@ Before executing a signed division (`idiv`), you **must** stretch the sign bit o
 | `ax` (16-bit) | `cwd` (Convert Word to Double) | `dx` | Prep for 16-bit `idiv` |
 | `eax` (32-bit)| `cdq` (Convert Double to Quad)| `edx` | Prep for 32-bit `idiv` |
 | `rax` (64-bit)| `cqo` (Convert Quad to Octo) | `rdx` | Prep for 64-bit `idiv` |
+
+Example
+```Assembly
+; ---------------------------------------------------------
+; Goal: Calculate -50 / 3 using signed 32-bit division
+; ---------------------------------------------------------
+
+section .text
+global _start
+
+_start:
+    ; 1. Load the dividend into eax
+    mov eax, -50       ; eax now holds 0xFFFFFFCE (-50 in Two's Complement)
+
+    ; 2. Load the divisor into any other register
+    mov ebx, 3         ; ebx now holds 0x00000003
+
+    ; 3. CRITICAL STEP: Sign Extension
+    cdq                ; "Convert Double to Quad"
+                       ; Because the highest bit of eax is a 1 (it's negative),
+                       ; cdq automatically fills edx entirely with 1s.
+                       ; edx becomes 0xFFFFFFFF.
+                       ; (If eax were positive, cdq would fill edx with 0s).
+                       ; Now edx:eax perfectly represents a 64-bit -50!
+
+    ; 4. Execute the division
+    idiv ebx           ; CPU divides the 64-bit edx:eax by the 32-bit ebx
+                       ; Result:
+                       ; eax (Quotient)  = -16 (0xFFFFFFF0)
+                       ; edx (Remainder) = -2  (0xFFFFFFFE)
+```
