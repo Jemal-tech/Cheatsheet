@@ -299,9 +299,8 @@ GDB is incredibly helpful here. Instead of making you read the raw hex (`0x246`)
 * If you see **`ZF`** in the brackets, the Zero Flag is **1** (Set).
 * If `ZF` is missing from the brackets, the Zero Flag is **0** (Cleared).
 
-# x86-64 Division Cheat Sheet (`div` and `idiv`)
+## x86-64 Division (`div` and `idiv`)
 
-### The Golden Rule of x86 Division
 **The size of your DIVISOR dictates everything.** The CPU forces the Dividend to be exactly *twice* the size of the Divisor. If your quotient requires more space than the designated Quotient Register, the CPU will crash with a `Floating point exception`.
 
 ---
