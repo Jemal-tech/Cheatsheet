@@ -298,3 +298,91 @@ If you type `i r eflags` (Info Registers: EFLAGS), GDB will print something like
 GDB is incredibly helpful here. Instead of making you read the raw hex (`0x246`), it puts the active flags inside brackets `[ ]`. 
 * If you see **`ZF`** in the brackets, the Zero Flag is **1** (Set).
 * If `ZF` is missing from the brackets, the Zero Flag is **0** (Cleared).
+
+# x86-64 Division Cheat Sheet (`div` and `idiv`)
+
+### The Golden Rule of x86 Division
+**The size of your DIVISOR dictates everything.** The CPU forces the Dividend to be exactly *twice* the size of the Divisor. If your quotient requires more space than the designated Quotient Register, the CPU will crash with a `Floating point exception`.
+
+---
+
+### The Master Blueprint
+| Divisor Size | Example Divisor | Expected Dividend (Implicit) | Quotient Destination | Remainder Destination |
+| :--- | :--- | :--- | :--- | :--- |
+| **8-bit** | `bl`, `cl`, `r8b` | **`ax`** (16-bit) | **`al`** (8-bit) | **`ah`** (8-bit) |
+| **16-bit** | `bx`, `cx`, `r8w` | **`dx:ax`** (32-bit) | **`ax`** (16-bit) | **`dx`** (16-bit) |
+| **32-bit** | `ebx`, `ecx`, `r8d`| **`edx:eax`** (64-bit) | **`eax`** (32-bit) | **`edx`** (32-bit) |
+| **64-bit** | `rbx`, `rcx`, `r8` | **`rdx:rax`** (128-bit) | **`rax`** (64-bit) | **`rdx`** (64-bit) |
+
+---
+
+### Part 1: UNSIGNED Division (`div`)
+**The Setup Rule:** You must manually clear the upper half of the dividend to zero so the CPU doesn't include leftover garbage in your math!
+
+**a. 8-bit Divisor** (Clearing not needed if you load `ax` directly)
+```nasm
+mov ax, 250       ; Dividend goes into ax
+mov bl, 10        ; Divisor goes into 8-bit register
+div bl            ; Result: al = 25, ah = 0
+```
+
+**b. 16-bit Divisor**
+```nasm
+mov ax, 50000     ; Lower 16-bits of dividend into ax
+xor dx, dx        ; CRITICAL: Clear upper 16-bits (dx = 0)
+mov bx, 10        ; Divisor goes into 16-bit register
+div bx            ; Result: ax = 5000, dx = 0
+```
+
+**c. 32-bit Divisor**
+```nasm
+mov eax, 100000   ; Lower 32-bits of dividend into eax
+xor edx, edx      ; CRITICAL: Clear upper 32-bits (edx = 0)
+mov ebx, 10       ; Divisor goes into 32-bit register
+div ebx           ; Result: eax = 10000, edx = 0
+```
+
+**d. 64-bit Divisor**
+```nasm
+mov rax, 100000   ; Lower 64-bits of dividend into rax
+xor rdx, rdx      ; CRITICAL: Clear upper 64-bits (rdx = 0)
+mov rbx, 10       ; Divisor goes into 64-bit register
+div rbx           ; Result: rax = 10000, rdx = 0
+```
+
+---
+
+### Part 2: SIGNED Division (`idiv`)
+**The Setup Rule:** You must use the dedicated **Sign Extension** instructions to stretch the sign bit of the lower register entirely across the upper register. Never use `xor` here!
+
+**a. 8-bit Divisor**
+```nasm
+mov al, -50       ; Load dividend into al (NOT ax!)
+cbw               ; "Convert Byte to Word" -> Sign-extends al into ax
+mov bl, 3         ; Divisor goes into 8-bit register
+idiv bl           ; Result: al = -16 (Quotient), ah = -2 (Remainder)
+```
+
+**b. 16-bit Divisor**
+```nasm
+mov ax, -5000     ; Load dividend into ax
+cwd               ; "Convert Word to Double" -> Sign-extends ax into dx
+mov bx, 3         ; Divisor goes into 16-bit register
+idiv bx           ; Result: ax = -1666 (Quot), dx = -2 (Rem)
+```
+
+**c. 32-bit Divisor**
+```nasm
+mov eax, -50000   ; Load dividend into eax
+cdq               ; "Convert Double to Quad" -> Sign-extends eax into edx
+mov ebx, 3        ; Divisor goes into 32-bit register
+idiv ebx          ; Result: eax = -16666 (Quot), edx = -2 (Rem)
+```
+
+**d. 64-bit Divisor**
+```nasm
+mov rax, -50000   ; Load dividend into rax
+cqo               ; "Convert Quad to Octo" -> Sign-extends rax into rdx
+mov rbx, 3        ; Divisor goes into 64-bit register
+idiv rbx          ; Result: rax = -16666 (Quot), rdx = -2 (Rem)
+```
