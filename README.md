@@ -239,3 +239,62 @@ add al, 128   ; Add 128 to al
 ```
 * **Unsigned View:** `128 + 128 = 256`. This exceeds the 255 limit, dropping a bit off the edge. **CF is set to 1.**
 * **Signed View:** `-128 + -128 = -256`. The absolute minimum number is -128. Adding two negative numbers causes the sign bit to accidentally flip to `0` (positive). The CPU sees *Negative + Negative = Positive* and panics. **OF is set to 1.**
+
+## GDB
+
+### a. The Visual Dashboard (TUI Mode)
+If you only learn one thing about GDB, make it this. By default, GDB is a blind text prompt. You can turn on a graphical layout that shows your registers and assembly updating in real-time.
+| Command | Shortcut | Description |
+| :--- | :--- | :--- |
+| `layout asm` | | Splits the screen to show your assembly code live. |
+| `layout reg` | | Splits the screen again to show all CPU registers and Flags! |
+| `focus cmd` | | Moves your keyboard cursor back to the command prompt. |
+| *Refresh* | `Ctrl + L` | If the screen glitches (common when `printf` prints over the UI), this redrawns the dashboard perfectly. |
+
+---
+
+### b. Execution Control (Time Travel)
+
+| Command | Shortcut | Description |
+| :--- | :--- | :--- |
+| `run` | `r` | Starts the program. Runs until it hits a breakpoint or crashes. |
+| `start` | | Starts the program but automatically pauses at the very first instruction (usually `main`). |
+| `continue` | `c` | Unpauses the program. Runs until the next breakpoint. |
+| `stepi` | `si` | **Step Instruction:** Executes exactly *one* assembly instruction. If it's a `call`, it jumps *inside* the function. |
+| `nexti` | `ni` | **Next Instruction:** Executes exactly *one* assembly instruction. If it's a `call`, it executes the whole function and pauses on the next line. |
+| `quit` | `q` | Exits GDB. |
+
+---
+
+### c. Planting Breakpoints (Trapping the CPU)
+Breakpoints tell the CPU: *"Run at full speed, but slam the brakes right before you execute this specific line."*
+
+| Command | Example | Description |
+| :--- | :--- | :--- |
+| `break <label>` | `b main` or `b jump_incoming` | Sets a breakpoint at a named function or assembly label. |
+| `break *<address>`| `b *0x40114a` | Sets a breakpoint at a specific raw memory address (Crucial for CTFs without labels!). |
+| `info break` | `i b` | Lists all your active breakpoints and their ID numbers. |
+| `delete <ID>` | `d 1` | Deletes breakpoint #1. |
+
+---
+
+### d. Interrogating the State (Memory, Registers, and Flags)
+When the program is paused, you use these commands to figure out exactly what the CPU is thinking.
+
+| Command | Example | Description |
+| :--- | :--- | :--- |
+| `info registers` | `i r` | Dumps the current value of all registers. |
+| `print $<reg>` | `p $rax` or `p/x $rax`| Prints a specific register. Use `p/x` to print it in Hexadecimal. *(Note the `$` prefix!)* |
+| `examine` | `x/x $rip` | The **Examine** command. Looks at raw memory. This example shows the hex byte exactly where `rip` is pointing. |
+| `examine string` | `x/s $rdi` | Looks at the memory address inside `$rdi` and prints it as a text string. (Amazing for finding hidden passwords in CTFs). |
+
+---
+
+### e. Reading the RFLAGS Register (The `ZF` Mystery)
+
+If you type `i r eflags` (Info Registers: EFLAGS), GDB will print something like this:
+`eflags         0x246    [ PF ZF IF ]`
+
+GDB is incredibly helpful here. Instead of making you read the raw hex (`0x246`), it puts the active flags inside brackets `[ ]`. 
+* If you see **`ZF`** in the brackets, the Zero Flag is **1** (Set).
+* If `ZF` is missing from the brackets, the Zero Flag is **0** (Cleared).
